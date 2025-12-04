@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat'Bruti</title>
+    <link rel="stylesheet" href="chatbot.css">
+</head>
+<body>
+    <!-- Bouton flottant -->
+    <button class="chatbot-button" id="chatbotButton" aria-label="Ouvrir Chat'Bruti">
+        🐱
+    </button>
+
+    <!-- Conteneur du chat -->
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>🐱 Chat'Bruti</h1>
+                <p>Le chatbot qui répond toujours à côté de la plaque</p>
+                <button class="close-button" id="closeButton" aria-label="Fermer">✕</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    👋 Bienvenue ! Posez n'importe quelle question et préparez-vous à une réponse... surprenante !
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="userInput" 
+                    placeholder="Écrivez votre message..."
+                    autocomplete="off"
+                >
+                <button class="send-button" id="sendButton">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="chatbot.js"></script>
+</body>
+</html>
