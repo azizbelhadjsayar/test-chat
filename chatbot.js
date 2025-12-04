@@ -10,7 +10,6 @@ const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
 const chatbotButton = document.getElementById('chatbotButton');
 const chatbotWindow = document.getElementById('chatbotWindow');
-const closeButton = document.getElementById('closeButton');
 
 // Indicateur de frappe
 const typingIndicator = document.createElement('div');
@@ -154,20 +153,24 @@ userInput.addEventListener('keypress', (e) => {
 
 // Gestion du bouton flottant et de la fenêtre
 chatbotButton.addEventListener('click', function() {
-    chatbotWindow.classList.add('active');
-    chatbotButton.classList.add('hidden');
-    userInput.focus();
-});
-
-closeButton.addEventListener('click', function() {
-    chatbotWindow.classList.remove('active');
-    chatbotButton.classList.remove('hidden');
+    const isOpen = chatbotWindow.classList.contains('active');
+    
+    if (isOpen) {
+        // Fermer le chat
+        chatbotWindow.classList.remove('active');
+        chatbotButton.classList.remove('open');
+    } else {
+        // Ouvrir le chat
+        chatbotWindow.classList.add('active');
+        chatbotButton.classList.add('open');
+        userInput.focus();
+    }
 });
 
 // Fermer avec la touche Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape' && chatbotWindow.classList.contains('active')) {
         chatbotWindow.classList.remove('active');
-        chatbotButton.classList.remove('hidden');
+        chatbotButton.classList.remove('open');
     }
 });
