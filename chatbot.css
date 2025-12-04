@@ -10,6 +10,7 @@ body {
     height: 100vh;
     overflow: hidden;
     position: relative;
+    pointer-events: auto;
 }
 
 /* ============================================
@@ -34,6 +35,7 @@ body {
     transition: transform 0.3s, box-shadow 0.3s;
     z-index: 999998;
     animation: pulse 2s infinite;
+    pointer-events: auto;
 }
 
 .chatbot-button:hover {
@@ -61,7 +63,6 @@ body {
 /* ============================================
    FENÊTRE DU CHATBOT
    ============================================ */
-
 .chatbot-window {
     position: fixed;
     bottom: 90px;
@@ -74,6 +75,7 @@ body {
     z-index: 999999;
     display: none;
     animation: slideIn 0.3s ease-out;
+    pointer-events: auto;
 }
 
 .chatbot-window.active {
