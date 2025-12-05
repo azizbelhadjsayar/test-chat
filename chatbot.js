@@ -29,7 +29,7 @@ function addMessage(text, sender) {
     messageDiv.className = `message ${sender}`;
 
     const avatar = sender === 'user' ? '👤' : '🐱';
-    
+
     messageDiv.innerHTML = `
         <div class="message-avatar">${avatar}</div>
         <div class="message-bubble">${escapeHtml(text)}</div>
@@ -43,7 +43,7 @@ function addMessage(text, sender) {
 function addErrorMessage(text) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message error';
-    
+
     messageDiv.innerHTML = `
         <div class="message-avatar">⚠️</div>
         <div class="message-bubble">${escapeHtml(text)}</div>
@@ -85,7 +85,7 @@ function hideTypingIndicator() {
 // Envoyer un message au webhook
 async function sendMessage() {
     const message = userInput.value.trim();
-    
+
     if (!message || isProcessing) return;
 
     // Désactiver l'input pendant le traitement
@@ -120,7 +120,7 @@ async function sendMessage() {
         }
 
         const data = await response.json();
-        
+
         // Afficher la réponse du bot
         if (data.reply) {
             addMessage(data.reply, 'bot');
@@ -151,26 +151,37 @@ userInput.addEventListener('keypress', (e) => {
     }
 });
 
+// Fonction pour notifier le parent du changement d'état
+// Fonction pour notifier le parent du changement d'état
+function notifyParent(state) {
+    // Toujours envoyer le message, même si parent === window (pour les tests locaux parfois)
+    // Mais surtout utile quand on est dans une iframe
+    window.parent.postMessage({ type: state }, '*');
+}
+
 // Gestion du bouton flottant et de la fenêtre
-chatbotButton.addEventListener('click', function() {
+chatbotButton.addEventListener('click', function () {
     const isOpen = chatbotWindow.classList.contains('active');
-    
+
     if (isOpen) {
         // Fermer le chat
         chatbotWindow.classList.remove('active');
         chatbotButton.classList.remove('open');
+        notifyParent('chatbot-closed');
     } else {
         // Ouvrir le chat
         chatbotWindow.classList.add('active');
         chatbotButton.classList.add('open');
         userInput.focus();
+        notifyParent('chatbot-opened');
     }
 });
 
 // Fermer avec la touche Escape
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && chatbotWindow.classList.contains('active')) {
         chatbotWindow.classList.remove('active');
         chatbotButton.classList.remove('open');
+        notifyParent('chatbot-closed');
     }
 });
