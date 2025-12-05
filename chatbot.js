@@ -1,7 +1,7 @@
-// ⚙️ CONFIGURATION - Modifiez l'URL de votre webhook n8n ici
+// ⚙️ CONFIGURATION
 const WEBHOOK_URL = 'https://votre-webhook-n8n.com/webhook/chatbruti';
 
-// État de l'application
+// État
 let isProcessing = false;
 
 // Éléments DOM
@@ -10,6 +10,7 @@ const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
 const chatbotButton = document.getElementById('chatbotButton');
 const chatbotWindow = document.getElementById('chatbotWindow');
+const closeButton = document.getElementById('closeButton');
 
 // Indicateur de frappe
 const typingIndicator = document.createElement('div');
@@ -17,17 +18,32 @@ typingIndicator.className = 'message bot';
 typingIndicator.innerHTML = `
     <div class="message-avatar">🤖</div>
     <div class="typing-indicator">
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span>
     </div>
 `;
 
-// Fonction pour ajouter un message
+// --- Fonctions Utilitaires ---
+
+function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function notifyParent(state) {
+    // Envoie un message à la fenêtre parente (celle qui contient l'iframe)
+    window.parent.postMessage({ type: state }, '*');
+}
+
+// --- Fonctions d'Affichage ---
+
 function addMessage(text, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${sender}`;
-
     const avatar = sender === 'user' ? '👤' : '🐱';
 
     messageDiv.innerHTML = `
@@ -39,101 +55,70 @@ function addMessage(text, sender) {
     scrollToBottom();
 }
 
-// Fonction pour afficher une erreur
 function addErrorMessage(text) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message error';
-
     messageDiv.innerHTML = `
         <div class="message-avatar">⚠️</div>
         <div class="message-bubble">${escapeHtml(text)}</div>
     `;
-
     chatMessages.appendChild(messageDiv);
     scrollToBottom();
 }
 
-// Échapper le HTML pour éviter les injections
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Scroll automatique
-function scrollToBottom() {
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// Afficher l'indicateur de frappe
 function showTypingIndicator() {
     chatMessages.appendChild(typingIndicator);
-    const indicator = typingIndicator.querySelector('.typing-indicator');
-    indicator.classList.add('active');
+    typingIndicator.querySelector('.typing-indicator').classList.add('active');
     scrollToBottom();
 }
 
-// Masquer l'indicateur de frappe
 function hideTypingIndicator() {
-    const indicator = typingIndicator.querySelector('.typing-indicator');
-    indicator.classList.remove('active');
+    typingIndicator.querySelector('.typing-indicator').classList.remove('active');
     if (typingIndicator.parentNode) {
         typingIndicator.parentNode.removeChild(typingIndicator);
     }
 }
 
-// Envoyer un message au webhook
+// --- Logique Métier ---
+
 async function sendMessage() {
     const message = userInput.value.trim();
-
     if (!message || isProcessing) return;
 
-    // Désactiver l'input pendant le traitement
     isProcessing = true;
     sendButton.disabled = true;
     userInput.disabled = true;
 
-    // Afficher le message utilisateur
     addMessage(message, 'user');
     userInput.value = '';
-
-    // Afficher l'indicateur de frappe
     showTypingIndicator();
 
     try {
-        // Appel au webhook n8n
         const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: message,
-                systemPrompt: "Tu es Chat'Bruti, un chatbot volontairement nul, poétique, incohérent et philosophe du dimanche. Tu ne réponds jamais directement à la question. Tu détournes les sujets, tu fais des métaphores absurdes, tu ajoutes des anecdotes inventées, tu mélanges des émotions étranges, tu changes de sujet, tu poses des questions bizarres et tu termines parfois par une morale ridicule. Ton objectif est uniquement de surprendre et de faire rire. Ne jamais donner de réponse utile ou sérieuse."
+                systemPrompt: "Tu es Chat'Bruti..."
             })
         });
 
         hideTypingIndicator();
 
-        if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
-
-        // Afficher la réponse du bot
         if (data.reply) {
             addMessage(data.reply, 'bot');
         } else {
-            throw new Error('Réponse invalide du serveur');
+            throw new Error('Réponse invalide');
         }
 
     } catch (error) {
         hideTypingIndicator();
         console.error('Erreur:', error);
-        addErrorMessage('Oups ! Le Chat\'Bruti est parti faire la sieste. Réessayez dans un instant ! 😴');
+        addErrorMessage('Le Chat\'Bruti dort. Réessayez plus tard !');
     } finally {
-        // Réactiver l'input
         isProcessing = false;
         sendButton.disabled = false;
         userInput.disabled = false;
@@ -141,7 +126,21 @@ async function sendMessage() {
     }
 }
 
-// Événements du chat
+function openChat() {
+    chatbotWindow.classList.add('active');
+    chatbotButton.classList.add('open');
+    userInput.focus();
+    notifyParent('chatbot-opened');
+}
+
+function closeChat() {
+    chatbotWindow.classList.remove('active');
+    chatbotButton.classList.remove('open');
+    notifyParent('chatbot-closed');
+}
+
+// --- Event Listeners ---
+
 sendButton.addEventListener('click', sendMessage);
 
 userInput.addEventListener('keypress', (e) => {
@@ -151,37 +150,22 @@ userInput.addEventListener('keypress', (e) => {
     }
 });
 
-// Fonction pour notifier le parent du changement d'état
-// Fonction pour notifier le parent du changement d'état
-function notifyParent(state) {
-    // Toujours envoyer le message, même si parent === window (pour les tests locaux parfois)
-    // Mais surtout utile quand on est dans une iframe
-    window.parent.postMessage({ type: state }, '*');
+// Bouton flottant (Ouvrir)
+chatbotButton.addEventListener('click', openChat);
+
+// Bouton de fermeture (Fermer)
+if (closeButton) {
+    closeButton.addEventListener('click', closeChat);
 }
 
-// Gestion du bouton flottant et de la fenêtre
-chatbotButton.addEventListener('click', function () {
-    const isOpen = chatbotWindow.classList.contains('active');
-
-    if (isOpen) {
-        // Fermer le chat
-        chatbotWindow.classList.remove('active');
-        chatbotButton.classList.remove('open');
-        notifyParent('chatbot-closed');
-    } else {
-        // Ouvrir le chat
-        chatbotWindow.classList.add('active');
-        chatbotButton.classList.add('open');
-        userInput.focus();
-        notifyParent('chatbot-opened');
+// Touche Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && chatbotWindow.classList.contains('active')) {
+        closeChat();
     }
 });
 
-// Fermer avec la touche Escape
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && chatbotWindow.classList.contains('active')) {
-        chatbotWindow.classList.remove('active');
-        chatbotButton.classList.remove('open');
-        notifyParent('chatbot-closed');
-    }
+// Signal Prêt
+window.addEventListener('load', () => {
+    notifyParent('chatbruti-ready');
 });

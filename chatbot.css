@@ -1,3 +1,4 @@
+/* Reset & Base */
 * {
     margin: 0;
     padding: 0;
@@ -7,21 +8,19 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: transparent;
-    /* CRUCIAL pour l'overlay */
+    /* CRUCIAL: Fond transparent pour l'iframe */
     height: 100vh;
     width: 100vw;
     overflow: hidden;
+    /* Pas de scroll sur le body */
     position: relative;
     pointer-events: none;
-    /* Le corps ne capture pas les clics */
+    /* Le body ne capture pas les clics, seuls les éléments interactifs le font */
 }
-
-/* Seuls les éléments avec pointer-events: auto seront cliquables */
 
 /* ============================================
    BOUTON FLOTTANT
    ============================================ */
-
 .chatbot-button {
     position: fixed;
     bottom: 20px;
@@ -31,6 +30,21 @@ body {
     border-radius: 50%;
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(240, 147, 251, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;
+    z-index: 1000;
+    /* Toujours visible */
+    pointer-events: auto;
+    /* Cliquable */
+    animation: pulse 2s infinite;
+}
+
+.chatbot-button:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 30px rgba(240, 147, 251, 0.6);
 }
@@ -39,22 +53,10 @@ body {
     transform: scale(0.95);
 }
 
-.chatbot-button .button-icon {
-    display: block;
-    transition: transform 0.3s;
-}
-
-.chatbot-button.open .button-icon {
-    transform: rotate(90deg);
-}
-
-.chatbot-button.open .button-icon::before {
-    content: '✕';
-    font-size: 26px;
-}
-
-.chatbot-button.open .button-icon {
-    font-size: 0;
+/* Quand ouvert, on cache le bouton flottant pour éviter la superposition */
+.chatbot-button.open {
+    opacity: 0;
+    pointer-events: none;
 }
 
 @keyframes pulse {
@@ -74,21 +76,49 @@ body {
    ============================================ */
 .chatbot-window {
     position: fixed;
-    bottom: 90px;
-    right: 20px;
-    width: 400px;
-    height: 600px;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    z-index: 999999;
+    bottom: 0;
+    /* Collé au bas */
+    right: 0;
+    /* Collé à droite */
+    width: 100%;
+    /* Prend toute la largeur de l'iframe (qui est redimensionnée par clip-path) */
+    height: 100%;
+    /* Prend toute la hauteur de l'iframe */
+    background: transparent;
+    z-index: 999;
     display: none;
-    animation: slideIn 0.3s ease-out;
     pointer-events: auto;
+    /* Cliquable */
 }
 
 .chatbot-window.active {
-    display: block;
+    display: flex;
+    /* Flex pour centrer ou gérer le layout */
+    flex-direction: column;
+}
+
+/* Conteneur interne pour donner la forme et les marges */
+.chat-container {
+    position: absolute;
+    bottom: 20px;
+    /* Marge du bas */
+    right: 20px;
+    /* Marge de droite */
+    width: calc(100% - 40px);
+    /* Largeur moins les marges */
+    height: calc(100% - 40px);
+    /* Hauteur moins les marges */
+    max-width: 400px;
+    /* Largeur max */
+    max-height: 700px;
+    /* Hauteur max */
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease-out;
 }
 
 @keyframes slideIn {
@@ -103,15 +133,9 @@ body {
     }
 }
 
-.chat-container {
-    width: 100%;
-    height: 100%;
-    background: white;
-    display: flex;
-    flex-direction: column;
-    pointer-events: auto;
-}
-
+/* ============================================
+   HEADER & CLOSE BUTTON
+   ============================================ */
 .chat-header {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     padding: 15px 20px;
@@ -131,25 +155,35 @@ body {
     opacity: 0.9;
 }
 
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.close-button:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* ============================================
+   MESSAGES & INPUT
+   ============================================ */
 .chat-messages {
     flex: 1;
     padding: 15px;
     overflow-y: auto;
     background: #f8f9fa;
     scroll-behavior: smooth;
-}
-
-.chat-messages::-webkit-scrollbar {
-    width: 6px;
-}
-
-.chat-messages::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-    background: #c5c5c5;
-    border-radius: 3px;
 }
 
 .message {
@@ -244,7 +278,6 @@ body {
     font-size: 13px;
     outline: none;
     transition: border-color 0.3s;
-    pointer-events: auto;
 }
 
 .chat-input:focus {
@@ -264,7 +297,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    pointer-events: auto;
 }
 
 .send-button:hover {
@@ -279,9 +311,9 @@ body {
 .send-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: scale(1);
 }
 
+/* Typing Indicator */
 .typing-indicator {
     display: none;
     padding: 10px 14px;
@@ -336,23 +368,15 @@ body {
     font-size: 13px;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-@media (max-width: 768px) {
-    .chatbot-window {
-        width: calc(100vw - 40px);
-        height: calc(100vh - 40px);
-        bottom: 20px;
-        right: 20px;
-        left: 20px;
-        border-radius: 15px;
-    }
-
-    .chatbot-button {
-        width: 55px;
-        height: 55px;
-        font-size: 24px;
+/* Responsive */
+@media (max-width: 480px) {
+    .chat-container {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        bottom: 0;
+        right: 0;
+        border-radius: 0;
     }
 }
